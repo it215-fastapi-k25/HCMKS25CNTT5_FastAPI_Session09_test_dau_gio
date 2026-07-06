@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Query,status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse 
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 from typing import Optional
@@ -45,7 +45,7 @@ def get_next_id() -> int:
 async def http_exception_handler(request, exc: HTTPException):
     detail = exc.detail
     if isinstance(detail, dict):
-        message = detail.get("message", "Đã xảy ra lỗi")
+        message = detail.get("message", "An error occurred.")
         error = detail.get("error")
     else:
         message = str(detail)
@@ -60,7 +60,7 @@ async def http_exception_handler(request, exc: HTTPException):
 @app.get("/flights",tags=["Flights"],status_code=status.HTTP_200_OK)
 def get_flights(status: Optional[str] = Query(default=None)):
     result = [f for f in flights_db if f["status"] == status] if status else flights_db
-    return build_envelope(200, "Lấy danh sách chuyến bay thành công!", result, None, "/flights")
+    return build_envelope(200, "Successfully retrieved the flight list!", result, None, "/flights")
 
 
 @app.post("/flights",tags=["Flights"] , status_code=status.HTTP_201_CREATED)
@@ -69,8 +69,8 @@ def create_flight(payload: FlightCreate):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
-                "message": "Lỗi: Số hiệu chuyến bay này đã tồn tại trên hệ thống điều hành!",
-                "error": "ERR-AIR-01: Flight number conflict in current active schedule database.",
+                "message": "Error: This flight number already exists in the operating system.!",
+                "error": "Flight number conflict in current active schedule database.",
             },
         )
 
@@ -83,7 +83,7 @@ def create_flight(payload: FlightCreate):
         "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
     }
     flights_db.append(new_flight)
-    return build_envelope(201, "Khởi tạo chuyến bay mới thành công!", new_flight, None, "/flights")
+    return build_envelope(201, "New flight successfully initialized!", new_flight, None, "/flights")
 
 
 @app.delete("/flights/{flight_id}",tags=["Flights"])
@@ -93,10 +93,10 @@ def delete_flight(flight_id: int):
         raise HTTPException(
             status_code=404,
             detail={
-                "message": "Lỗi: Không tìm thấy mã chuyến bay yêu cầu để hủy!",
-                "error": "ERR-AIR-02: Target flight ID is missing from system scope.",
+                "message": "Error: Flight code required for cancellation not found!",
+                "error": "Target flight ID is missing from system scope.",
             },
         )
 
     flights_db.remove(flight)
-    return build_envelope(200, "Hủy chuyến bay thành công!", None, None, f"/flights/{flight_id}")
+    return build_envelope(200, "Flight successfully cancelled.!", None, None, f"/flights/{flight_id}")
